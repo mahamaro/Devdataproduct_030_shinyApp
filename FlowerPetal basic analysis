@@ -1,0 +1,42 @@
+#ui.R
+#We will use the "iris" data in this app
+data(iris)
+myspecies<-unique(iris[,5])
+#getting stated
+library(shiny)
+library(shiny)
+shinyUI(pageWithSidebar(
+  headerPanel("Flower species"),
+  sidebarPanel(
+    h3('Chose a flower specie'),
+    selectInput(inputId="species", label="my specie", choices= c("setosa", "versicolor", "virginica"), multiple = FALSE,
+                selectize = TRUE, width = NULL, size = NULL),
+    #Provide a submit button (no change in the summary table until the user submit)
+    submitButton("Submit")
+  ),
+  mainPanel(
+    h3('My Flower Petal Analysis'),
+    textOutput("flower"),
+    tableOutput("summary_table"),
+    plotOutput("ggplot_result")
+  )
+))
+
+#server.R
+library(shiny)
+library(ggplot2)
+
+shinyServer(
+  function(input, output) {
+    #show the users' choice in the main panel
+    output$flower<-renderPrint({ paste("Your specie is:",input$species)})
+    #calculation of a basic summary of the chosen specy and show it into a summary table
+    #The table contents' vary according to type of flower chosen by the user
+    output$summary_table<-renderTable({summary(subset(iris, Species == input$species))})
+    output$ggplot_result<-renderPlot({
+      p<-ggplot(subset(iris, Species == input$species),
+                 aes(x=Petal.Length, y=Petal.Width) )
+      p+geom_point()+geom_smooth(method="lm")
+      })
+  }
+)
